@@ -3,14 +3,14 @@ const webpack = require('webpack')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const IS_PROD = process.env.NODE_ENV === 'production'
 const DEV_ENTRY = './examples/main.js'
-const PROD_ENTRY = './src/index.vue'
+const PROD_ENTRY = './src/index.js'
 module.exports = {
   entry: IS_PROD ? PROD_ENTRY : DEV_ENTRY,
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
     filename: 'index.js',
-    // library: 'vue-tool-tip',       // 模块名称
+    library: 'vtip',       // 模块名称
     libraryTarget: 'umd',   // 输出格式
     umdNamedDefine: true    // 是否将模块名称作为 AMD 输出的命名空间
   },

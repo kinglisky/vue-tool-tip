@@ -1,6 +1,6 @@
 
 // 获取视口的大小
-export function getClientView () {
+function getClientView () {
   var vw = window.innerWidth || document.documentElement.clientWidth
   var vh = window.innerHeight || document.documentElement.clientHeight
   return {
@@ -10,7 +10,7 @@ export function getClientView () {
 }
 
 // 获取页面中某个元素的位置信息
-export function getElementBox (el) {
+function getElementBox (el) {
   if (!el) return
   var rect = el.getBoundingClientRect()
   var clent = getClientView()
@@ -41,7 +41,7 @@ export function getElementBox (el) {
 }
 
 // 获取一个元素最优的展示方向
-export function getBestCoordinate (el, target, limitDirects) {
+function getBestCoordinate (el, target, limitDirects) {
   var directs = limitDirects
   if (!directs || !directs.length) {
     directs = ['top', 'right', 'bottom', 'left']
@@ -83,3 +83,5 @@ export function getBestCoordinate (el, target, limitDirects) {
     targetBox: targetBox
   }
 }
+
+export { getClientView, getElementBox, getBestCoordinate }

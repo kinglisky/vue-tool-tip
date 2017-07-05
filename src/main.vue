@@ -3,7 +3,7 @@
     <div v-show="visible"
       class="vue-tool-tip"
       :class="boxClass"
-      :style="boxWidth"
+      :style="boxStyle"
       @mouseenter="mouseEntered = true"
       @mouseleave="mouseEntered = false"
       @transitionend="handleTransitionend">
@@ -25,8 +25,7 @@
 </template>
 
 <script>
-import Vue from 'vue'
-import { getBestCoordinate } from './util'
+import { getBestCoordinate } from './util.js'
 
 function getPoint (bestDirect, box) {
   const { direct, x, y } = bestDirect
@@ -76,7 +75,10 @@ export default {
       }
     },
 
-    // tip 窗口多久后自动消失，为 0 不消失
+    // 是否保持 tip 的显示状态
+    keep: Boolean,
+
+    // tip 窗口多久后自动消失，为 <=0 不消失
     duration: {
       type: Number,
       default: 2000
@@ -100,6 +102,12 @@ export default {
       default: 'auto'
     },
 
+    // tip 的 z-index
+    zIndex: {
+      type: Number,
+      default: 9999
+    },
+
     // 自定义 class 的类名
     customClass: {
       type: String,
@@ -108,7 +116,6 @@ export default {
   },
 
   data () {
-    this.visibleTimer = null
     return {
       // tip 的展示方向（小箭头的方向）
       direct: '',
@@ -126,10 +133,11 @@ export default {
       }
     },
 
-    boxWidth () {
+    boxStyle () {
       const width = this.width
       return {
-        width: typeof width === 'string' ? width : `${width}px`
+        width: typeof width === 'string' ? width : `${width}px`,
+        zIndex: this.zIndex
       }
     },
 
@@ -156,10 +164,8 @@ export default {
     target (target) {
       if (target && this.$el) {
         this.visible = true
-        this.$nextTick(() => {
-          this.setTipCoordinate()
-          this.setTipVisible()
-        })
+        this.setTipVisible()
+        this.setTipCoordinate()
       }
     },
 
@@ -173,19 +179,22 @@ export default {
   methods: {
     // 设置 tip 的位置
     setTipCoordinate () {
-      const { bestDirect, elBox } = getBestCoordinate(this.$el, this.target)
-      const point = getPoint(bestDirect, elBox)
-      this.direct = bestDirect.direct
-      this.$el.style.left = point.x + 'px'
-      this.$el.style.top = point.y + 'px'
+      this.$nextTick(() => {
+        const { $el, target, direction } = this
+        const { bestDirect, elBox } = getBestCoordinate($el, target, direction)
+        const point = getPoint(bestDirect, elBox)
+        this.direct = bestDirect.direct
+        this.$el.style.left = point.x + 'px'
+        this.$el.style.top = point.y + 'px'
+      })
     },
 
     // 设置 tip 的显示与否
     setTipVisible () {
       clearTimeout(this.visibleTimer)
-      if (!this.duration) return
+      if (this.duration <= 0) return
       this.visibleTimer = setTimeout(() => {
-        this.visible = this.mouseEntered
+        this.visible = this.keep || this.mouseEntered
         this.visibleTimer = null
       }, this.duration)
     },
@@ -194,15 +203,21 @@ export default {
       if (propertyName === 'opacity' || propertyName === 'left') {
         this.$emit('transend')
       }
+    },
+
+    hiddenTip () {
+      this.visible = false
     }
+  },
+
+  created () {
+    this.visibleTimer = null
   }
 }
 </script>
 
 <style lang="scss">
 .vue-tool-tip {
-  $size: 12px;
-  $contentSize: $size - 1px;
   $borderColor: #ddd;
   $mask: #fff;
 
@@ -215,7 +230,7 @@ export default {
   box-shadow: 3px 3px 10px $borderColor;
   position: fixed;
   background: $mask;
-  z-index: 1000;
+  z-index: 9999;
   transition:
     opacity .3s,
     top .5s cubic-bezier(0.4, 0, 0.2, 1),
